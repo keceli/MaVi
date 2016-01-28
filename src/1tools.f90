@@ -48,11 +48,17 @@ CONTAINS
     REAL(8), DIMENSION(order,order)::matrix
     REAL(8), DIMENSION(order)::eigenvalues
     REAL(8), DIMENSION(3*order-1) :: work
+    INTEGER          LWMAX
+    PARAMETER        ( LWMAX = 1000 )
+!     .. External Subroutines ..
+    EXTERNAL         DSYEV
+    INTRINSIC        INT, MIN
     lda=max(1,order)
     lwork = -1 ! to get the optimum lwork
     CALL dsyev('V','U',order,matrix,lda,eigenvalues,work,lwork,info)
-    lwork=INT( work( 1 ) )
-    CALL diagnow(order,lwork,matrix,eigenvalues)
+    lwork = MIN( LWMAX, INT( WORK( 1 ) ) )
+    CALL dsyev('V','U',order,matrix,lda,eigenvalues,work,lwork,info)
+    !CALL diagnow(order,lwork,matrix,eigenvalues)
     !              PRINT*,'info=',info
   END SUBROUTINE diag
 

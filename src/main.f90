@@ -589,7 +589,7 @@ SUBROUTINE readinput
    USE modVMP2
    IMPLICIT NONE
    REAL(8)::wallstart,cpustart,wallend,cpuend
-   PRINT*,"MaVi Mavi MaSMaVi v12.06.13 "
+   PRINT*,"MaVi Mavi MaSMaVi v16.01.28 "
    CALL readinput()
    !IF (runtyp=='VIB') CALL get_qff()
 !   IF (ssVSCF)CALL printssVSCf
