@@ -31,7 +31,7 @@ CONTAINS
     IF(maxexall>maxbasis)maxexall=maxbasis
     OPEN(UNIT=17,FILE='vci.mavi',STATUS='UNKNOWN',ACTION='WRITE')
     IF(VCIprint)OPEN(UNIT=27,FILE='allvci.mavi',STATUS='UNKNOWN',ACTION='WRITE')
-    WRITE(*,100)'FVCI: size= ',FCIsize
+    WRITE(*,100)'FVCI size: ',FCIsize
 100 FORMAT(a,i20)
     IF(restricted .and. (vci .or. vscfci))THEN
       do m=1,ndof
@@ -40,8 +40,8 @@ CONTAINS
       CALL formsnumvec()
       IF(Nstate>RCIsize)Nstate=RCIsize
       ! PRINT*,'maxsum= ',maxsum,'ncup=',ncup,
-      WRITE(*,200)'RVCI: ncup,maxsum,maxexall,maxEnergy,size= ',ncup,maxsum,maxexall,maxenergy,RCIsize
-200   FORMAT(a,4i4,i8)
+      WRITE(*,200)'RVCI size: ',RCIsize,'ncup,maxsum,maxexall,maxEnergy ', ncup,maxsum,maxexall,maxenergy
+200   FORMAT(a,i10,a, 4i4)
      ! PRINT*,'Max restricted CI size=',maxRCIsize
      ! PRINT*,'Restricted CI size=',RCIsize
     ENDIF
@@ -77,7 +77,7 @@ CONTAINS
     IMPLICIT NONE
     IF(vci)CALL getvci()
     IF(vci1)CALL getvci1()
-        IF(vscfci)CALL getvscfci()
+    IF(vscfci)CALL getvscfci()
     IF(vscfci1)CALL getvscfci1()
 
   END SUBROUTINE runVCI
@@ -142,7 +142,6 @@ CONTAINS
     ENDDO
     RCIsize=j
     IF(debug)print*,"Allocating snumvec",maxRCIsize,FCIsize
-    !      ALLOCATE(snumvec(min(maxRCIsize,FCIsize)))
     ALLOCATE(snumvec(RCIsize))
     j=0
     DO i=0,limit
@@ -251,24 +250,24 @@ CONTAINS
     USE modStates
     USE integral
     IMPLICIT NONE
-    INTEGER::i,j,m,m1,m2,m3,m4,n,n1,n2,n3,n4,size,maxndiffer
+    INTEGER::i,j,m,m1,m2,m3,m4,n,n1,n2,n3,n4,CIsize,maxndiffer
     INTEGER::ket(ndof),bra(ndof),diffvec(ndof),ndiffer,diff1,diff2,diff3,diff4
     REAL*8:: tmp
     REAL*8,ALLOCATABLE::ham(:,:),energies(:)
     IF(debug)PRINT*,"getVCI"
         Eground=1.d10
-    size=FCIsize
+    CIsize=FCIsize
     maxndiffer=nMR
     IF(VCIprint)write(27,'(a)')'HOVCI'
     write(17,'(a)')'HOVCI'
     IF(restricted)THEN
-      size=RCIsize
+      CIsize=RCIsize
     ENDIF
-    ALLOCATE(ham(size,size),energies(size))
+    ALLOCATE(ham(CIsize,CIsize),energies(CIsize))
     ham=0.d0
     !call countstates()
-    if(vcidebug)PRINT*,"HO VCI Hamiltonian initialized with size", size
-    DO i=0,size-1
+    if(vcidebug)PRINT*,"HO VCI Hamiltonian initialized with size", CIsize
+    DO i=0,CIsize-1
       tmp=0.d0
       IF(restricted)THEN
         CALL RCIstatelabel(snumvec(i+1),ket)
@@ -291,7 +290,7 @@ CONTAINS
         ENDDO !m1
       ENDIF !nMR>1
       Ham(i+1,i+1)=tmp
-      DO j=i+1,size-1
+      DO j=i+1,CIsize-1
         tmp=0.d0
         IF(restricted)THEN
           CALL RCIstatelabel(snumvec(j+1),bra)
@@ -381,13 +380,13 @@ CONTAINS
     ENDDO!end for i
     !  CALL writesquare(vciorder,ham*convert)
     if(vcidebug)PRINT*,"diagonilazation..."
-    CALL diag(size,ham,energies)
+    CALL diag(CIsize,ham,energies)
     !  CALL writesquare(vciorder,ham)
     PRINT*,'HOVCI'
     !      PRINT*,energies*convert
     DO i=1,Nstate
-      CALL printstate(size,ham(:,i),energies(i)*convert)
-      IF(VCIprint)CALL printall(size,ham(:,i),energies(i)*convert)
+      CALL printstate(CIsize,ham(:,i),energies(i)*convert)
+      IF(VCIprint)CALL printall(CIsize,ham(:,i),energies(i)*convert)
     ENDDO
     Eground=1.d10
     IF(debug)PRINT*,"getVCI :)"
@@ -732,7 +731,7 @@ CONTAINS
     USE modalintegral
     USE modVSCF
     IMPLICIT NONE
-    INTEGER::i,j,m1,m2,m3,m4,size,maxndiffer
+    INTEGER::i,j,m1,m2,m3,m4,CIsize,maxndiffer
     INTEGER::ket(ndof),bra(ndof),diffvec(ndof),ndiffer
     REAL*8:: tmp
     REAL*8,ALLOCATABLE::ham(:,:),energies(:)
@@ -743,15 +742,15 @@ CONTAINS
     Eground=1.d10
     CALL subvscf(ket)
     CALL form_modalint()
-    size=FCIsize
+    CIsize=FCIsize
     maxndiffer=nMR
     IF(restricted)THEN
-      size=RCIsize
+      CIsize=RCIsize
     ENDIF
-    ALLOCATE(ham(size,size),energies(size))
+    ALLOCATE(ham(CIsize,CIsize),energies(CIsize))
     ham=0.d0
-    if(vcidebug) PRINT*,"VSCF VCI Hamiltonian initialized with size ", size
-    DO i=0,size-1
+    if(vcidebug) PRINT*,"VSCF VCI Hamiltonian initialized with size ", CIsize
+    DO i=0,CIsize-1
       tmp=0.d0
       IF(restricted)THEN
         CALL RCIstatelabel(snumvec(i+1),ket)
@@ -759,7 +758,7 @@ CONTAINS
         CALL statelabel(i,ket)
       ENDIF
       Ham(i+1,i+1)=fullmodalint(ket,ket)
-      DO j=i+1,size-1
+      DO j=i+1,CIsize-1
         tmp=0.d0
         IF(restricted)THEN
           CALL RCIstatelabel(snumvec(j+1),bra)
@@ -835,12 +834,12 @@ CONTAINS
     ENDDO!end for i
     !  CALL writesquare(vciorder,ham*convert)
     if(vcidebug)PRINT*,"diagonilazation..."
-    CALL diag(size,ham,energies)
+    CALL diag(CIsize,ham,energies)
     !  CALL writesquare(vciorder,ham)
     PRINT*,'VSCFCI'
     DO i=1,Nstate
-      CALL printstate(size,ham(:,i),energies(i)*convert)
-      IF(VCIprint)CALL printall(size,ham(:,i),energies(i)*convert)
+      CALL printstate(CIsize,ham(:,i),energies(i)*convert)
+      IF(VCIprint)CALL printall(CIsize,ham(:,i),energies(i)*convert)
     ENDDO
     Eground=1.d10
     IF(debug)PRINT*,"getvscfci :)"
