@@ -110,7 +110,7 @@ CONTAINS
   !enddo
   !end subroutine
 
-  INTEGER*8 FUNCTION snumvecsize()
+  INTEGER FUNCTION snumvecsize()
     USE global
     USE modstates
     IMPLICIT NONE

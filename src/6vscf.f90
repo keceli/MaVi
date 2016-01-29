@@ -459,6 +459,7 @@ CONTAINS
     IF(debug)PRINT*,"subvscf"
     iter=0
     oldenergy=0.d0
+    energy=0.d0
     coef=0.d0
     newcoef=0.d0
     freq=hrmfreq

@@ -29,7 +29,7 @@ CONTAINS
   SUBROUTINE wall_and_cpu_time(wall,cpu)
     IMPLICIT NONE
     REAL(8), INTENT(out) :: wall, cpu
-    INTEGER(8):: t, t_rate, t_max
+    INTEGER:: t, t_rate, t_max
 
     CALL CPU_TIME(cpu)
     CALL SYSTEM_CLOCK(t,t_rate,t_max)
@@ -47,19 +47,20 @@ CONTAINS
     INTEGER :: order,info,lda,lwork
     REAL(8), DIMENSION(order,order)::matrix
     REAL(8), DIMENSION(order)::eigenvalues
-    REAL(8), DIMENSION(3*order-1) :: work
-    INTEGER          LWMAX
-    PARAMETER        ( LWMAX = 1000 )
+    REAL(8), DIMENSION(3*order) :: work
 !     .. External Subroutines ..
     EXTERNAL         DSYEV
     INTRINSIC        INT, MIN
     lda=max(1,order)
     lwork = -1 ! to get the optimum lwork
     CALL dsyev('V','U',order,matrix,lda,eigenvalues,work,lwork,info)
-    lwork = MIN( LWMAX, INT( WORK( 1 ) ) )
-    CALL dsyev('V','U',order,matrix,lda,eigenvalues,work,lwork,info)
-    !CALL diagnow(order,lwork,matrix,eigenvalues)
-    !              PRINT*,'info=',info
+    IF(info == 0) THEN 
+        lwork =  INT( WORK( 1 ) ) 
+        CALL diagnow(order,lwork,matrix,eigenvalues)
+    ELSE    
+        PRINT*,'Lapack dsyev error: order, info=',order, info
+        STOP 'Diagoonalization problem'
+    END IF        
   END SUBROUTINE diag
 
   SUBROUTINE diagnow(order,lwork,matrix,eigenvalues)
@@ -70,7 +71,10 @@ CONTAINS
     REAL(8), DIMENSION(lwork) :: work
     lda=max(1,order)
     CALL dsyev('V','U',order,matrix,lda,eigenvalues,work,lwork,info)
-    !              PRINT*,'info=',info
+    IF (info .ne. 0) THEN   
+        PRINT*,'Lapack dsyev error: order, info=',order, info
+        STOP 'Diagoonalization problem'
+    END IF
   END SUBROUTINE diagnow
 
 !  SUBROUTINE complex_diag(order,matrix,eigenvalues)
